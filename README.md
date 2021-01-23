@@ -89,10 +89,6 @@ impl Game for MyGame {
                 y = v;
             }
         }
-        sys.pset(0, 0, 0);
-
-        sys.line(1, 1, 2, 1, 7);
-        sys.line(2, 2, 2, 3, 6);
     }
 }
 
