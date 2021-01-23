@@ -18,6 +18,7 @@ pub struct SystemImpl {
     pub screen: [u8; 128 * 128],
     pub color: u8,
     pub std_rng: StdRng,
+    palette: [Color; 16],
 }
 
 impl SystemImpl {
@@ -41,33 +42,7 @@ impl SystemImpl {
 
         let event_pump = sdl_context.event_pump()?;
 
-        Ok(SystemImpl {
-            event_pump,
-            window_canvas,
-            screen: [0; 128 * 128],
-            color: 6,
-            std_rng: StdRng::from_entropy(),
-        })
-    }
-
-    pub fn before_update(&mut self) -> bool {
-        for event in self.event_pump.poll_iter() {
-            match event {
-                Event::Quit {..} => {
-                    return false
-                },
-                _ => {}
-            }
-        }
-
-        true
-    }
-
-    pub fn render(&mut self) -> Result<(), String> {
-        self.window_canvas.set_draw_color(Color::BLACK);
-        self.window_canvas.clear();
-
-        let colors = [
+        let palette = [
             Color::RGB(0, 0, 0),
             Color::RGB(29, 43, 83),
             Color::RGB(126, 37, 83),
@@ -89,9 +64,37 @@ impl SystemImpl {
             Color::RGB(255, 204, 170),
         ];
 
+        Ok(SystemImpl {
+            event_pump,
+            window_canvas,
+            screen: [0; 128 * 128],
+            color: 6,
+            std_rng: StdRng::from_entropy(),
+            palette,
+        })
+    }
+
+    pub fn before_update(&mut self) -> bool {
+        for event in self.event_pump.poll_iter() {
+            match event {
+                Event::Quit {..} => {
+                    return false
+                },
+                _ => {}
+            }
+        }
+
+        true
+    }
+
+    pub fn render(&mut self) -> Result<(), String> {
+        self.window_canvas.set_draw_color(Color::BLACK);
+        self.window_canvas.clear();
+
+        // TODO: consider to use separated canvas
         for i in 0..self.screen.len() {
             let color_index = self.screen[i];
-            let color = colors[color_index as usize];
+            let color = self.palette[color_index as usize];
             self.window_canvas.set_draw_color(color);
             self.window_canvas.draw_point(Point::new((i % 128) as i32, (i / 128) as i32))?;
         }
