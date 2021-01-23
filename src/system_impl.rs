@@ -3,21 +3,102 @@ use rand::{
     SeedableRng,
     rngs::StdRng,
 };
+use sdl2::{
+    EventPump,
+    event::Event,
+    render::WindowCanvas,
+    pixels::Color,
+    rect::Point,
+};
 use crate::System;
 
 pub struct SystemImpl {
+    pub event_pump: EventPump,
+    pub window_canvas: WindowCanvas,
     pub screen: [u8; 128 * 128],
     pub color: u8,
     pub std_rng: StdRng,
 }
 
 impl SystemImpl {
-    pub fn new() -> SystemImpl {
-        SystemImpl {
+    pub fn new() -> Result<SystemImpl, String> {
+        let sdl_context = sdl2::init()?;
+        let video_subsystem = sdl_context.video()?;
+        let window = video_subsystem.window("game tutorial", 800, 600)
+            .position_centered()
+            .resizable()
+            .build()
+            .expect("could not initialize video subsystem");
+
+        // TODO:
+        // sdl2::hint::set("SDL_RENDER_SCALE_QUALITY", "0");
+
+        let mut window_canvas = window.into_canvas().build()
+            .expect("could not make a canvas");
+        window_canvas.set_logical_size(128, 128)
+            .expect("set_logical_size");
+
+
+        let event_pump = sdl_context.event_pump()?;
+
+        Ok(SystemImpl {
+            event_pump,
+            window_canvas,
             screen: [0; 128 * 128],
             color: 6,
             std_rng: StdRng::from_entropy(),
+        })
+    }
+
+    pub fn before_update(&mut self) -> bool {
+        for event in self.event_pump.poll_iter() {
+            match event {
+                Event::Quit {..} => {
+                    return false
+                },
+                _ => {}
+            }
         }
+
+        true
+    }
+
+    pub fn render(&mut self) -> Result<(), String> {
+        self.window_canvas.set_draw_color(Color::BLACK);
+        self.window_canvas.clear();
+
+        let colors = [
+            Color::RGB(0, 0, 0),
+            Color::RGB(29, 43, 83),
+            Color::RGB(126, 37, 83),
+            Color::RGB(0, 135, 81),
+
+            Color::RGB(171, 82, 54),
+            Color::RGB(95, 87, 79),
+            Color::RGB(194, 195, 199),
+            Color::RGB(255, 241, 232),
+
+            Color::RGB(255, 0, 77),
+            Color::RGB(255, 163, 0),
+            Color::RGB(255, 236, 39),
+            Color::RGB(0, 228, 54),
+
+            Color::RGB(41, 173, 255),
+            Color::RGB(131, 118, 156),
+            Color::RGB(255, 119, 168),
+            Color::RGB(255, 204, 170),
+        ];
+
+        for i in 0..self.screen.len() {
+            let color_index = self.screen[i];
+            let color = colors[color_index as usize];
+            self.window_canvas.set_draw_color(color);
+            self.window_canvas.draw_point(Point::new((i % 128) as i32, (i / 128) as i32))?;
+        }
+
+        self.window_canvas.present();
+
+        Ok(())
     }
 }
 
