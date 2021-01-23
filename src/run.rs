@@ -7,7 +7,7 @@ use sdl2::{
 use std::time::Duration;
 use crate::{
     Game,
-    system::SystemImpl,
+    system_impl::SystemImpl,
 };
 
 pub fn run(game: &mut impl Game) -> Result<(), String> {
